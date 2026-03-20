@@ -14,50 +14,8 @@ Traditional insurance models fail these workers: claim processes are slow and co
 
 ## Architecture
 
-```
-┌──────────┐
-│  Worker   │
-│  (App)    │
-└────┬─────┘
-     │
-     ▼
-┌──────────────┐      ┌──────────────┐
-│  Onboarding  │─────▶│   Database   │◀──────┐
-│  (Register/  │      │  (PostgreSQL)│       │
-│   Login)     │      └──────┬───────┘       │
-└──────────────┘             │               │
-                             ▼               │
-┌──────────────┐      ┌──────────────┐      │
-│ External APIs│─────▶│ Event Engine │      │
-│ (Weather/AQI)│      │ (Parametric  │      │
-└──────────────┘      │  Triggers)   │      │
-                      └──────┬───────┘      │
-                             │               │
-                             ▼               │
-                      ┌──────────────┐      │
-                      │ Payout Engine│──────┘
-                      │ (Compute &   │
-                      │  Disburse)   │
-                      └──────┬───────┘
-                             │
-                             ▼
-┌──────────────┐      ┌──────────────┐
-│  Scheduler   │─────▶│  Payment     │
-│ (APScheduler)│      │  Service     │
-│              │      │  (Razorpay)  │
-└──────────────┘      └──────────────┘
-                             │
-                             ▼
-                      ┌──────────────┐
-                      │  Dashboard   │
-                      │ (Worker/Admin│
-                      │  Analytics)  │
-                      └──────────────┘
-```
+<img width="1006" height="468" alt="image" src="https://github.com/user-attachments/assets/f4431bf8-edcd-4d3e-9787-5b510f138852" />
 
----
-
----
 
 ## Pricing Model
 
