@@ -6,6 +6,7 @@ import { SubmitButton } from '../../components/forms/SubmitButton'
 import { InlineError } from '../../components/forms/InlineError'
 import { useAuth } from '../../contexts/AuthContext'
 import { ROUTES } from '../../app/routes'
+import { apiClient } from '../../lib/apiClient'
 
 export function LoginPage() {
   const [phone, setPhone] = useState('')
@@ -23,6 +24,11 @@ export function LoginPage() {
     setIsLoading(true)
     try {
       await login({ phone, otp })
+      const existingPolicies = await apiClient.getPolicies()
+      if (existingPolicies.length === 0) {
+        navigate(ROUTES.policies, { state: { forceRecommendationSelection: true } })
+        return
+      }
       navigate(fromPath ?? ROUTES.appDashboard)
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Unable to login')

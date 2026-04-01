@@ -16,7 +16,11 @@ class WorkerRegister(BaseModel):
     phone: str = Field(..., pattern=r"^\+91\d{10}$", examples=["+919876543210"])
     city: str = Field(..., min_length=2, max_length=60, examples=["Mumbai"])
     pincode: str = Field(..., pattern=r"^\d{6}$", examples=["400001"])
-    platform: str = Field(..., pattern=r"^(zomato|swiggy)$", examples=["zomato"])
+    platform: str = Field(
+        ...,
+        pattern=r"^(swiggy|zomato|dunzo|ola|uber|rapido)$",
+        examples=["zomato"],
+    )
     avg_weekly_income_inr: float = Field(..., gt=0, examples=[8000.0])
     vehicle_type: str = Field(
         ..., pattern=r"^(bike|scooter|cycle)$", examples=["bike"]

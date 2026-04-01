@@ -22,6 +22,7 @@ apscheduler==3.10.4
 # Testing
 pytest==8.3.4
 pytest-asyncio==0.25.0
+aiosqlite==0.22.1
 
 # ASGI
 python-multipart==0.0.20

@@ -17,9 +17,9 @@ export function RegisterPage() {
 
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
-  const [city, setCity] = useState('Mumbai')
+  const [city, setCity] = useState('Bangalore')
   const [pincode, setPincode] = useState('')
-  const [platform, setPlatform] = useState<'zomato' | 'swiggy'>('zomato')
+  const [platform, setPlatform] = useState<'swiggy' | 'zomato' | 'dunzo' | 'ola' | 'uber' | 'rapido'>('swiggy')
   const [income, setIncome] = useState('8000')
   const [vehicleType, setVehicleType] = useState<'bike' | 'scooter' | 'cycle'>('bike')
 
@@ -54,15 +54,33 @@ export function RegisterPage() {
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <TextField label="Name" value={name} onChange={setName} />
           <PhoneField value={phone} onChange={setPhone} />
-          <TextField label="City" value={city} onChange={setCity} />
+          <SelectField
+            label="City"
+            value={city}
+            onChange={setCity}
+            options={[
+              { label: 'Bangalore', value: 'Bangalore' },
+              { label: 'Hyderabad', value: 'Hyderabad' },
+              { label: 'Chennai', value: 'Chennai' },
+              { label: 'Pune', value: 'Pune' },
+              { label: 'Kolkata', value: 'Kolkata' },
+              { label: 'Ahmedabad', value: 'Ahmedabad' },
+              { label: 'Surat', value: 'Surat' },
+              { label: 'Jaipur', value: 'Jaipur' },
+            ]}
+          />
           <TextField label="Pincode" value={pincode} onChange={setPincode} />
           <SelectField
             label="Platform"
             value={platform}
-            onChange={(value) => setPlatform(value as 'zomato' | 'swiggy')}
+            onChange={(value) => setPlatform(value as 'swiggy' | 'zomato' | 'dunzo' | 'ola' | 'uber' | 'rapido')}
             options={[
-              { label: 'Zomato', value: 'zomato' },
               { label: 'Swiggy', value: 'swiggy' },
+              { label: 'Zomato', value: 'zomato' },
+              { label: 'Dunzo', value: 'dunzo' },
+              { label: 'Ola', value: 'ola' },
+              { label: 'Uber', value: 'uber' },
+              { label: 'Rapido', value: 'rapido' },
             ]}
           />
           <SelectField

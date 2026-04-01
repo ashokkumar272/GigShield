@@ -14,9 +14,34 @@ export type WorkerRegisterPayload = {
   phone: string
   city: string
   pincode: string
-  platform: 'zomato' | 'swiggy'
+  platform: 'swiggy' | 'zomato' | 'dunzo' | 'ola' | 'uber' | 'rapido'
   avg_weekly_income_inr: number
   vehicle_type: 'bike' | 'scooter' | 'cycle'
+}
+
+export type PolicyRecommendation = {
+  plan_name: string
+  recommendation_score: number
+  parameter_scores: Record<string, number>
+  weekly_premium_inr: number
+  coverage_amount_inr: number
+  risk_score: number
+  summary: string
+}
+
+export type PolicyRecommendationResponse = {
+  recommendations: PolicyRecommendation[]
+}
+
+export type PolicyCreatePayload = {
+  selected_recommendation?: {
+    plan_name: string
+    recommendation_score: number
+    parameter_scores: Record<string, number>
+    weekly_premium_inr: number
+    coverage_amount_inr: number
+    risk_score: number
+  }
 }
 
 export type WorkerLoginPayload = {

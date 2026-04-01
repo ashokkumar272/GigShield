@@ -10,7 +10,36 @@ class PolicyCreate(BaseModel):
     """Payload for POST /policies — creates a new weekly policy for the
     authenticated worker.  The pricing engine is invoked server-side."""
 
-    pass  # No user input needed — worker_id comes from JWT, pricing is auto-calculated
+    selected_recommendation: "SelectedRecommendationPayload | None" = None
+
+
+class SelectedRecommendationPayload(BaseModel):
+    """Selected policy recommendation from onboarding or policy setup."""
+
+    plan_name: str = Field(..., min_length=3, max_length=80)
+    recommendation_score: float = Field(..., ge=0.0, le=100.0)
+    parameter_scores: dict[str, float] = Field(default_factory=dict)
+    weekly_premium_inr: float = Field(..., gt=0)
+    coverage_amount_inr: float = Field(..., gt=0)
+    risk_score: float = Field(..., ge=0.0, le=10.0)
+
+
+class PolicyRecommendation(BaseModel):
+    """A recommended policy plan for a worker profile."""
+
+    plan_name: str
+    recommendation_score: float
+    parameter_scores: dict[str, float]
+    weekly_premium_inr: float
+    coverage_amount_inr: float
+    risk_score: float
+    summary: str
+
+
+class PolicyRecommendationResponse(BaseModel):
+    """List response for policy recommendations."""
+
+    recommendations: list[PolicyRecommendation]
 
 
 class PolicyResponse(BaseModel):

@@ -7,6 +7,8 @@ import type {
   EventTriggerResponse,
   Payout,
   Policy,
+  PolicyCreatePayload,
+  PolicyRecommendationResponse,
   PremiumBreakdownResponse,
   ProcessPayoutResponse,
   TokenResponse,
@@ -93,8 +95,23 @@ export const apiClient = {
       method: 'POST',
       auth: true,
     }),
+  createPolicyFromRecommendation: (payload: PolicyCreatePayload) =>
+    request<Policy>('/api/v1/policies', {
+      method: 'POST',
+      auth: true,
+      body: JSON.stringify(payload),
+    }),
+  getPolicyRecommendations: () =>
+    request<PolicyRecommendationResponse>('/api/v1/policies/recommendations', {
+      auth: true,
+    }),
   getPolicies: () => request<Policy[]>('/api/v1/policies/me', { auth: true }),
   getPolicyById: (policyId: string) => request<Policy>(`/api/v1/policies/${policyId}`, { auth: true }),
+  deletePolicy: (policyId: string) =>
+    request<Policy>(`/api/v1/policies/${policyId}`, {
+      method: 'DELETE',
+      auth: true,
+    }),
   getClaims: () => request<Claim[]>('/api/v1/claims/me', { auth: true }),
   getClaimById: (claimId: string) => request<Claim>(`/api/v1/claims/${claimId}`, { auth: true }),
   getPayouts: () => request<Payout[]>('/api/v1/payouts/me', { auth: true }),

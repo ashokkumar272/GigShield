@@ -8,7 +8,9 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
+from app.database import init_database
 from app.routers import claims, dashboard, events, onboarding, payouts, policy, pricing
 from app.services.scheduler import start_scheduler, stop_scheduler
 
@@ -23,6 +25,7 @@ logger = logging.getLogger("gigshield")
 async def lifespan(app: FastAPI):
     """Application lifespan — start scheduler on boot, stop on shutdown."""
     logger.info("🚀 GigShield starting up…")
+    await init_database()
     start_scheduler()
     yield
     stop_scheduler()
@@ -38,6 +41,21 @@ app = FastAPI(
     ),
     version="0.1.0",
     lifespan=lifespan,
+)
+
+allowed_origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:4173",
+    "http://127.0.0.1:4173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # ── Register routers ────────────────────────────────────────────────────────
