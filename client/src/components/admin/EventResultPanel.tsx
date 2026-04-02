@@ -5,13 +5,13 @@ export function EventResultPanel({ result }: { result: EventTriggerResponse | nu
   if (!result) return null
 
   return (
-    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
+    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm sm:p-5">
       <h3 className="text-base font-semibold text-emerald-900">Event Processed</h3>
       <p className="mt-2 text-sm text-emerald-800">{result.claims_created} claims were created.</p>
       <div className="mt-3 space-y-2">
         {result.claim_ids.map((claimId) => (
-          <div key={claimId} className="flex items-center justify-between rounded-lg bg-white px-3 py-2">
-            <p className="text-xs text-slate-700">{claimId}</p>
+          <div key={claimId} className="flex flex-col gap-2 rounded-lg bg-white px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="break-all text-xs text-slate-700">{claimId}</p>
             <CopyToClipboardButton value={claimId} label="Copy ID" />
           </div>
         ))}

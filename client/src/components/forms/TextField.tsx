@@ -23,7 +23,7 @@ export function TextField({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         type={type}
-        className={`w-full rounded-xl border px-3 py-2 text-sm text-slate-900 shadow-sm transition ${
+        className={`w-full rounded-xl border px-3 py-3 text-base text-slate-900 shadow-sm transition touch-manipulation sm:py-2.5 sm:text-sm ${
           error ? 'border-rose-300 bg-rose-50' : 'border-slate-300 bg-white focus:border-slate-500'
         }`}
       />

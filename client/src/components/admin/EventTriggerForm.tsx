@@ -37,7 +37,7 @@ export function EventTriggerForm({ onSubmit, onSuccess }: EventTriggerFormProps)
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <form onSubmit={handleSubmit} className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <h3 className="text-base font-semibold text-slate-900">Trigger Disruption Event</h3>
       <SelectField
         label="Event Type"
@@ -62,7 +62,7 @@ export function EventTriggerForm({ onSubmit, onSuccess }: EventTriggerFormProps)
       />
       <TextField label="City" value={city} onChange={setCity} />
       <TextField label="Timestamp" value={timestamp} onChange={setTimestamp} type="datetime-local" />
-      {error && <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
+      {error && <p className="rounded-lg bg-rose-50 px-3 py-3 text-sm text-rose-700">{error}</p>}
       <SubmitButton isLoading={isSubmitting}>Trigger Event</SubmitButton>
     </form>
   )

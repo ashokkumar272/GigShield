@@ -6,7 +6,7 @@ type MetricCardProps = {
 
 export function MetricCard({ label, value, hint }: MetricCardProps) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">{label}</p>
       <div className="mt-2 text-2xl font-bold text-slate-900">{value}</div>
       {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}

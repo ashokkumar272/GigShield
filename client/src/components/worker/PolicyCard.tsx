@@ -23,17 +23,17 @@ export function PolicyCard({ policy, onOpen, onDelete }: PolicyCardProps) {
         <span className="text-slate-600">Coverage</span>
         <AmountDisplay amount={policy.coverage_amount_inr} />
       </div>
-      <div className="mt-4 flex items-center gap-2">
+      <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
         <button
           onClick={() => onOpen(policy.id)}
-          className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+          className="rounded-lg border border-slate-300 px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:py-1.5"
         >
           View Details
         </button>
         {onDelete && (
           <button
             onClick={() => onDelete(policy)}
-            className="rounded-lg border border-rose-300 px-3 py-1.5 text-sm font-medium text-rose-700 transition hover:bg-rose-50"
+            className="rounded-lg border border-rose-300 px-3 py-3 text-sm font-medium text-rose-700 transition hover:bg-rose-50 sm:py-1.5"
           >
             Delete
           </button>
