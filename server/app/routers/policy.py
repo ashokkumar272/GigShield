@@ -55,20 +55,23 @@ async def create_policy(
 
     if payload and payload.selected_recommendation:
         selected = payload.selected_recommendation
+        selected_risk_score = {
+            "Basic": 3.5,
+            "Standard": 6.0,
+            "High": 8.0,
+        }.get(selected.plan_type, 5.0)
         risk_factor_names = [
-            f"plan:{selected.plan_name}",
-            f"recommendation_score:{selected.recommendation_score}",
-        ] + [
-            f"{name}:{value}"
-            for name, value in selected.parameter_scores.items()
+            f"plan:{selected.plan_type}",
+            f"expected_payout:{selected.expected_payout}",
+            f"value_score:{selected.value_score}",
         ]
 
         policy = Policy(
             worker_id=current_worker.id,
             status="active",
-            weekly_premium_inr=selected.weekly_premium_inr,
-            coverage_amount_inr=selected.coverage_amount_inr,
-            risk_score=selected.risk_score,
+            weekly_premium_inr=selected.premium,
+            coverage_amount_inr=selected.max_payout,
+            risk_score=selected_risk_score,
             risk_factors=json.dumps(risk_factor_names),
             start_date=now,
             end_date=now + timedelta(days=7),
@@ -106,8 +109,8 @@ async def create_policy(
 async def get_policy_recommendations(
     current_worker: Worker = Depends(get_current_worker),
 ) -> dict:
-    """Return 2-3 recommended plans with parameter-level random scores."""
-    recommendations = generate_policy_recommendations(current_worker)
+    """Return exactly 3 personalized plans: Basic, Standard, and High."""
+    recommendations = await generate_policy_recommendations(current_worker)
     return {"recommendations": recommendations}
 
 

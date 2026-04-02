@@ -2,6 +2,7 @@
 
 import uuid
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -16,24 +17,22 @@ class PolicyCreate(BaseModel):
 class SelectedRecommendationPayload(BaseModel):
     """Selected policy recommendation from onboarding or policy setup."""
 
-    plan_name: str = Field(..., min_length=3, max_length=80)
-    recommendation_score: float = Field(..., ge=0.0, le=100.0)
-    parameter_scores: dict[str, float] = Field(default_factory=dict)
-    weekly_premium_inr: float = Field(..., gt=0)
-    coverage_amount_inr: float = Field(..., gt=0)
-    risk_score: float = Field(..., ge=0.0, le=10.0)
+    plan_type: Literal["Basic", "Standard", "High"]
+    premium: float = Field(..., gt=0)
+    max_payout: float = Field(..., gt=0)
+    expected_payout: float = Field(..., ge=0)
+    value_score: float = Field(..., ge=0)
 
 
 class PolicyRecommendation(BaseModel):
     """A recommended policy plan for a worker profile."""
 
-    plan_name: str
-    recommendation_score: float
-    parameter_scores: dict[str, float]
-    weekly_premium_inr: float
-    coverage_amount_inr: float
-    risk_score: float
-    summary: str
+    plan_type: Literal["Basic", "Standard", "High"]
+    premium: float
+    max_payout: float
+    why_recommended: str
+    expected_payout: float
+    value_score: float
 
 
 class PolicyRecommendationResponse(BaseModel):

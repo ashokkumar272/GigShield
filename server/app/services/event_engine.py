@@ -18,9 +18,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.claim import Claim
+from app.models.payout import Payout
 from app.models.policy import Policy
 from app.models.worker import Worker
 from app.services.fraud_detection import run_fraud_checks
+from app.services.payment_service import disburse_payment
 from app.services.payout_engine import compute_payout_amount
 from app.utils.constants import AQI_THRESHOLD, RAINFALL_THRESHOLD_MM
 
@@ -64,7 +66,8 @@ async def process_event(
     2. Finds all workers in the affected city with active policies.
     3. Runs Phase 1 fraud checks on each worker.
     4. Computes the payout amount based on severity and coverage.
-    5. Creates ``Claim`` records for eligible workers.
+    5. Auto-disburses payment and creates ``Payout`` records.
+    6. Creates ``Claim`` records for eligible workers.
 
     Args:
         db: Async database session.
@@ -108,9 +111,27 @@ async def process_event(
             severity=severity,
         )
 
-        # Determine claim status based on fraud check
-        claim_status = "pending" if fraud_flag is None else "pending"
-        # Even flagged claims are created but flagged for review
+        # Flagged claims are recorded but not auto-paid.
+        if fraud_flag is not None:
+            claim = Claim(
+                worker_id=policy.worker_id,
+                policy_id=policy.id,
+                claim_type="income_loss",
+                event_type=event_type,
+                event_severity=severity,
+                event_description=(
+                    f"{event_type.replace('_', ' ').title()} event in {city} — "
+                    f"severity: {severity}"
+                ),
+                status="rejected",
+                payout_amount_inr=0.0,
+                fraud_flag=fraud_flag,
+                triggered_at=timestamp,
+            )
+            db.add(claim)
+            await db.flush()
+            claim_ids.append(claim.id)
+            continue
 
         event_description = (
             f"{event_type.replace('_', ' ').title()} event in {city} — "
@@ -124,13 +145,34 @@ async def process_event(
             event_type=event_type,
             event_severity=severity,
             event_description=event_description,
-            status=claim_status,
+            status="paid",
             payout_amount_inr=payout_amount,
-            fraud_flag=fraud_flag,
+            fraud_flag=None,
             triggered_at=timestamp,
         )
         db.add(claim)
         await db.flush()
+
+        payment_result = await disburse_payment(
+            claim_id=claim.id,
+            amount_inr=payout_amount,
+            payment_method="upi",
+        )
+
+        if payment_result.status != "processed":
+            claim.status = "rejected"
+
+        payout = Payout(
+            claim_id=claim.id,
+            worker_id=policy.worker_id,
+            amount_inr=payment_result.amount_inr,
+            status=payment_result.status,
+            transaction_id=payment_result.transaction_id,
+            payment_method="upi",
+            processed_at=payment_result.processed_at,
+        )
+        db.add(payout)
+
         claim_ids.append(claim.id)
 
     return claim_ids

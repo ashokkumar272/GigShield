@@ -77,7 +77,15 @@ async def test_event_trigger_creates_claim(
     assert len(claims) >= 1
     assert claims[0]["event_type"] == "rainfall"
     assert claims[0]["claim_type"] == "income_loss"
+    assert claims[0]["status"] == "paid"
     assert claims[0]["payout_amount_inr"] > 0
+
+    payouts_resp = await client.get("/api/v1/payouts/me", headers=headers)
+    assert payouts_resp.status_code == 200
+    payouts = payouts_resp.json()
+    assert len(payouts) >= 1
+    assert payouts[0]["status"] == "processed"
+    assert payouts[0]["amount_inr"] == claims[0]["payout_amount_inr"]
 
 
 @pytest.mark.asyncio

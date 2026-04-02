@@ -21,30 +21,33 @@ export function PolicyDetailPage() {
       .getPolicyById(id)
       .then(setPolicy)
       .catch((loadError: unknown) =>
-        setError(loadError instanceof Error ? loadError.message : 'Unable to load policy detail'),
+        setError(loadError instanceof Error ? loadError.message : 'Unable to load plan details'),
       )
       .finally(() => setLoading(false))
   }, [id])
 
   return (
-    <AppShell mode="worker" title="Policy Detail" subtitle="Full view of your policy terms.">
+    <AppShell mode="worker" title="Plan Details" subtitle="Your protection details for this week.">
       <button onClick={() => navigate(-1)} className="mb-3 text-sm font-medium text-slate-700 hover:underline">
         Back
       </button>
+      <section className="mb-4 rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-lime-50 p-4 shadow-sm">
+        <p className="text-sm font-semibold text-emerald-900">Your plan is active for this week.</p>
+      </section>
       {loading && <LoadingSkeleton lines={4} />}
       {!loading && error && <ErrorState message={error} />}
       {!loading && !error && policy && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-lime-100/30 p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-slate-900">Policy #{policy.id.slice(0, 8)}</h3>
+            <h3 className="text-lg font-semibold text-emerald-900">{policy.risk_factors?.includes('Basic') ? 'Basic Plan' : policy.risk_factors?.includes('Standard') ? 'Standard Plan' : policy.risk_factors?.includes('High') ? 'High Plan' : `Plan #${policy.id.slice(0, 8)}`}</h3>
             <StatusBadge status={policy.status} />
           </div>
           <div className="mt-3">
-            <BreakdownRow label="Weekly Premium" amount={policy.weekly_premium_inr} />
-            <BreakdownRow label="Coverage Amount" amount={policy.coverage_amount_inr} />
-            <BreakdownRow label="Risk Score" value={policy.risk_score.toFixed(2)} />
-            <BreakdownRow label="Start Date" value={formatDate(policy.start_date)} />
-            <BreakdownRow label="End Date" value={formatDate(policy.end_date)} />
+            <BreakdownRow label="Weekly cost" amount={policy.weekly_premium_inr} />
+            <BreakdownRow label="Max support" amount={policy.coverage_amount_inr} />
+            <BreakdownRow label="Risk level" value={policy.risk_score.toFixed(2)} />
+            <BreakdownRow label="Starts" value={formatDate(policy.start_date)} />
+            <BreakdownRow label="Ends" value={formatDate(policy.end_date)} />
           </div>
         </div>
       )}

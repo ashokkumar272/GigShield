@@ -22,7 +22,7 @@ export function PayoutsPage() {
     try {
       setPayouts(await apiClient.getPayouts())
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Unable to load payouts')
+      setError(loadError instanceof Error ? loadError.message : 'Unable to load money history')
     } finally {
       setLoading(false)
     }
@@ -38,11 +38,14 @@ export function PayoutsPage() {
   }, [payouts, page])
 
   return (
-    <AppShell mode="worker" title="Payout History" subtitle="All payout transactions linked to your claims.">
+    <AppShell mode="worker" title="Money History" subtitle="See money we sent to you.">
+      <section className="mb-4 rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-50 to-blue-50 p-4 shadow-sm">
+        <p className="text-sm font-semibold text-sky-900">Every transfer is tracked clearly for you.</p>
+      </section>
       {loading && <LoadingSkeleton lines={5} />}
-      {!loading && error && <RetryPanel title="Unable to load payouts" message={error} onRetry={() => void load()} />}
+      {!loading && error && <RetryPanel title="Unable to load money history" message={error} onRetry={() => void load()} />}
       {!loading && !error && payouts.length === 0 && (
-        <EmptyState title="No payouts yet" description="Processed claim payouts will show up here." />
+        <EmptyState title="No money sent yet" description="When support is sent, it shows here." />
       )}
       {!loading && !error && payouts.length > 0 && (
         <>

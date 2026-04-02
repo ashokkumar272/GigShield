@@ -13,7 +13,7 @@ class WorkerRegister(BaseModel):
     """Payload for POST /workers/register."""
 
     name: str = Field(..., min_length=2, max_length=120, examples=["Rajesh Kumar"])
-    phone: str = Field(..., pattern=r"^\+91\d{10}$", examples=["+919876543210"])
+    phone: str = Field(..., min_length=10, max_length=15, examples=["9876543210"])
     city: str = Field(..., min_length=2, max_length=60, examples=["Mumbai"])
     pincode: str = Field(..., pattern=r"^\d{6}$", examples=["400001"])
     platform: str = Field(
@@ -30,7 +30,7 @@ class WorkerRegister(BaseModel):
 class WorkerLogin(BaseModel):
     """Payload for POST /workers/login — OTP-based stub."""
 
-    phone: str = Field(..., pattern=r"^\+91\d{10}$", examples=["+919876543210"])
+    phone: str = Field(..., min_length=10, max_length=15, examples=["9876543210"])
     otp: str = Field(..., min_length=4, max_length=6, examples=["1234"])
 
 
