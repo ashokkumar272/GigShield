@@ -2,7 +2,7 @@ import type { WorkerProfile } from '../../types/api'
 
 export function WorkerProfileCard({ profile }: { profile: WorkerProfile }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <h3 className="text-base font-semibold text-slate-900">Worker Profile</h3>
       <dl className="mt-3 grid grid-cols-1 gap-2 text-sm text-slate-600 md:grid-cols-2">
         <div>

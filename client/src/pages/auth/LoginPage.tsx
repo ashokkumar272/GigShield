@@ -38,15 +38,21 @@ export function LoginPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-md items-center px-4">
-      <form onSubmit={handleSubmit} className="w-full space-y-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 className="text-2xl font-semibold text-slate-900">Worker Login</h1>
-        <p className="text-sm text-slate-600">Use your phone and OTP to continue.</p>
+    <div className="mx-auto flex min-h-screen max-w-md items-center px-4 py-6">
+      <form
+        onSubmit={handleSubmit}
+        className="w-full space-y-4 rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
+      >
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">GigShield</p>
+          <h1 className="mt-2 text-2xl font-semibold text-slate-900">Worker Login</h1>
+          <p className="mt-1 text-sm leading-6 text-slate-600">Use your phone and OTP to continue.</p>
+        </div>
         <PhoneField value={phone} onChange={setPhone} />
         <OTPField value={otp} onChange={setOtp} />
         <InlineError message={error} />
         <SubmitButton isLoading={isLoading}>Login</SubmitButton>
-        <p className="text-xs text-slate-500">
+        <p className="text-sm text-slate-500">
           New to GigShield? <Link to={ROUTES.register} className="font-semibold text-slate-800">Register</Link>
         </p>
       </form>
