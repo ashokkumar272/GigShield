@@ -16,7 +16,7 @@ class EventTrigger(BaseModel):
 
     event_type: str = Field(
         ...,
-        pattern=r"^(rainfall|aqi|curfew_strike)$",
+        pattern=r"^(rainfall|aqi|curfew_strike|traffic|news)$",
         examples=["rainfall"],
         description="Type of disruption event",
     )

@@ -70,10 +70,37 @@ async def weekly_premium_burn() -> None:
     )
 
 
+async def periodic_auto_claim_scan() -> None:
+    """Run the auto-claim scan for all active cities every 6 hours.
+
+    Fetches current weather, traffic, and news conditions, calculates
+    severity scores, and automatically creates income-loss claims for
+    workers in cities where thresholds are exceeded.
+    """
+    logger.info("Running periodic auto-claim scan…")
+    from app.services.auto_claim_service import run_auto_claim_scan  # avoid circular import
+
+    async with async_session_factory() as session:
+        results = await run_auto_claim_scan(db=session, dry_run=False)
+        await session.commit()
+
+    total_claims = sum(r.claims_created for r in results)
+    triggered_cities = [r.city for r in results if r.triggered]
+    logger.info(
+        "Periodic auto-claim scan complete — %d cities scanned, "
+        "%d claims created, triggered cities: %s",
+        len(results),
+        total_claims,
+        triggered_cities or "none",
+    )
+
+
 def start_scheduler() -> None:
     """Configure and start the APScheduler.
 
-    Adds the weekly premium burn job scheduled for every Monday at midnight UTC.
+    Registers:
+    - Weekly premium burn job (every Monday at midnight UTC).
+    - Periodic auto-claim scan job (every 6 hours).
     """
     scheduler.add_job(
         weekly_premium_burn,
@@ -84,8 +111,17 @@ def start_scheduler() -> None:
         id="weekly_premium_burn",
         replace_existing=True,
     )
+    scheduler.add_job(
+        periodic_auto_claim_scan,
+        trigger="interval",
+        hours=6,
+        id="periodic_auto_claim_scan",
+        replace_existing=True,
+    )
     scheduler.start()
-    logger.info("Scheduler started — weekly premium burn job registered")
+    logger.info(
+        "Scheduler started — weekly premium burn and auto-claim scan jobs registered"
+    )
 
 
 def stop_scheduler() -> None:

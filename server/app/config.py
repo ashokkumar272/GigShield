@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     # ── External APIs ─────────────────────────────────────────────────────
     use_mock_apis: bool = True
     openweather_api_key: str = ""
+    tomtom_api_key: str = ""       # TomTom Traffic API key
+    newsapi_key: str = ""          # NewsAPI.org key
 
     # ── Payment Gateway ───────────────────────────────────────────────────
     razorpay_key_id: str = ""

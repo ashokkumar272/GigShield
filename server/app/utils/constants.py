@@ -57,6 +57,23 @@ SEVERITY_PAYOUT_RATIOS: dict[str, float] = {
 DUPLICATE_CLAIM_WINDOW_HOURS = 48
 
 
+# ── Auto-Claim Scoring ─────────────────────────────────────────────────────
+
+# Minimum traffic congestion level (0–100) that contributes to a score
+TRAFFIC_CONGESTION_THRESHOLD: float = 70.0
+
+# Minimum number of disruption news articles before news_score is non-zero
+NEWS_DISRUPTION_THRESHOLD: int = 2
+
+# Weights used to combine sub-scores into the final severity score.
+# Must sum to 1.0.
+AUTO_CLAIM_SCORE_WEIGHTS: dict[str, float] = {
+    "weather": 0.40,
+    "traffic": 0.30,
+    "news": 0.30,
+}
+
+
 @dataclass(frozen=True)
 class DisruptionThreshold:
     """Immutable record describing a parametric trigger threshold."""

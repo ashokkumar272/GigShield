@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import init_database
 from app.routers import claims, dashboard, events, onboarding, payouts, policy, pricing
+from app.routers import auto_claim
 from app.services.scheduler import start_scheduler, stop_scheduler
 
 logging.basicConfig(
@@ -66,6 +67,7 @@ app.include_router(claims.router)
 app.include_router(payouts.router)
 app.include_router(events.router)
 app.include_router(dashboard.router)
+app.include_router(auto_claim.router)
 
 
 @app.get("/", tags=["Health"])
