@@ -20,13 +20,12 @@ export type WorkerRegisterPayload = {
 }
 
 export type PolicyRecommendation = {
-  plan_name: string
-  recommendation_score: number
-  parameter_scores: Record<string, number>
-  weekly_premium_inr: number
-  coverage_amount_inr: number
-  risk_score: number
-  summary: string
+  plan_type: 'Basic' | 'Standard' | 'High'
+  premium: number
+  max_payout: number
+  why_recommended: string
+  expected_payout: number
+  value_score: number
 }
 
 export type PolicyRecommendationResponse = {
@@ -35,12 +34,11 @@ export type PolicyRecommendationResponse = {
 
 export type PolicyCreatePayload = {
   selected_recommendation?: {
-    plan_name: string
-    recommendation_score: number
-    parameter_scores: Record<string, number>
-    weekly_premium_inr: number
-    coverage_amount_inr: number
-    risk_score: number
+    plan_type: 'Basic' | 'Standard' | 'High'
+    premium: number
+    max_payout: number
+    expected_payout: number
+    value_score: number
   }
 }
 

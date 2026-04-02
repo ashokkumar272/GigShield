@@ -12,7 +12,7 @@ export function PhoneField({ value, onChange, error }: PhoneFieldProps) {
       label="Phone"
       value={value}
       onChange={onChange}
-      placeholder="+919876543210"
+      placeholder="9876543210"
       error={error}
     />
   )

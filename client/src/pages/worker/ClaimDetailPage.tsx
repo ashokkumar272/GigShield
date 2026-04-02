@@ -6,7 +6,6 @@ import type { Claim } from '../../types/api'
 import { LoadingSkeleton } from '../../components/state/LoadingSkeleton'
 import { ErrorState } from '../../components/state/ErrorState'
 import { BreakdownRow } from '../../components/financial/BreakdownRow'
-import { ProcessPayoutPanel } from '../../components/worker/ProcessPayoutPanel'
 import { SeverityBadge } from '../../components/status/SeverityBadge'
 import { StatusBadge } from '../../components/status/StatusBadge'
 import { toTitleCase } from '../../lib/format'
@@ -24,7 +23,7 @@ export function ClaimDetailPage() {
     try {
       setClaim(await apiClient.getClaimById(id))
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Unable to load claim')
+      setError(loadError instanceof Error ? loadError.message : 'Unable to load support details')
     } finally {
       setLoading(false)
     }
@@ -35,28 +34,33 @@ export function ClaimDetailPage() {
   }, [id])
 
   return (
-    <AppShell mode="worker" title="Claim Detail" subtitle="Inspect claim status and process payout.">
+    <AppShell mode="worker" title="Support Details" subtitle="Check status and money updates.">
       <button onClick={() => navigate(-1)} className="mb-3 text-sm font-medium text-slate-700 hover:underline">
         Back
       </button>
+      <section className="mb-4 rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-4 shadow-sm">
+        <p className="text-sm font-semibold text-amber-900">You can track each support event clearly.</p>
+      </section>
       {loading && <LoadingSkeleton lines={4} />}
       {!loading && error && <ErrorState message={error} />}
       {!loading && !error && claim && (
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-          <div className="xl:col-span-2 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-100/30 p-5 shadow-sm">
             <div className="flex items-center gap-2">
               <StatusBadge status={claim.status} />
               <SeverityBadge severity={claim.event_severity} />
             </div>
             <div className="mt-3">
               <BreakdownRow label="Claim ID" value={claim.id} />
-              <BreakdownRow label="Claim Type" value={toTitleCase(claim.claim_type)} />
-              <BreakdownRow label="Event Type" value={toTitleCase(claim.event_type)} />
-              <BreakdownRow label="Payout Amount" amount={claim.payout_amount_inr} />
-              <BreakdownRow label="Fraud Flag" value={claim.fraud_flag ?? 'None'} />
+              <BreakdownRow label="Support type" value={toTitleCase(claim.claim_type)} />
+              <BreakdownRow label="Reason" value={toTitleCase(claim.event_type)} />
+              <BreakdownRow label="Money amount" amount={claim.payout_amount_inr} />
+              <BreakdownRow label="Safety check" value={claim.fraud_flag ?? 'None'} />
             </div>
           </div>
-          <ProcessPayoutPanel claimId={claim.id} claimStatus={claim.status} onSuccess={load} />
+          <section className="rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-900 shadow-sm">
+            Money is sent automatically to your account.
+          </section>
         </div>
       )}
     </AppShell>

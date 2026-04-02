@@ -11,15 +11,20 @@ const COLOR_MAP: Record<string, string> = {
   approved: 'bg-indigo-100 text-indigo-800',
 }
 
+const LABEL_MAP: Record<string, string> = {
+  processed: 'Paid',
+}
+
 export function StatusBadge({ status }: { status: string }) {
   const normalized = status.toLowerCase()
+  const label = LABEL_MAP[normalized] ?? toTitleCase(normalized)
   return (
     <span
       className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
         COLOR_MAP[normalized] ?? 'bg-slate-200 text-slate-700'
       }`}
     >
-      {toTitleCase(normalized)}
+      {label}
     </span>
   )
 }

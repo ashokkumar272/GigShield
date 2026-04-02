@@ -17,7 +17,7 @@ export function PricingPage() {
     try {
       setData(await apiClient.getPricingPreview())
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Unable to load pricing')
+      setError(loadError instanceof Error ? loadError.message : 'Unable to load weekly cost')
     } finally {
       setLoading(false)
     }
@@ -28,9 +28,12 @@ export function PricingPage() {
   }, [])
 
   return (
-    <AppShell mode="worker" title="Pricing Preview" subtitle="Your premium is calculated from your profile.">
+    <AppShell mode="worker" title="Weekly Cost" subtitle="Simple view of your weekly amount.">
+      <section className="mb-4 rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-50 to-cyan-50 p-4 shadow-sm">
+        <p className="text-sm font-semibold text-indigo-900">Easy weekly cost. No hidden surprises.</p>
+      </section>
       {loading && <LoadingSkeleton lines={5} />}
-      {!loading && error && <RetryPanel title="Unable to fetch pricing" message={error} onRetry={() => void load()} />}
+      {!loading && error && <RetryPanel title="Unable to load weekly cost" message={error} onRetry={() => void load()} />}
       {!loading && !error && data && <PremiumBreakdownCard data={data} />}
     </AppShell>
   )

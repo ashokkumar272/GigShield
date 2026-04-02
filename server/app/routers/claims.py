@@ -17,6 +17,7 @@ from app.models.policy import Policy
 from app.models.worker import Worker
 from app.schemas.claim import ClaimResponse, ManualClaimCreate
 from app.services.payout_engine import compute_payout_amount
+from app.services.payment_service import disburse_payment
 from app.utils.deps import get_current_worker, get_db
 
 router = APIRouter(prefix="/api/v1/claims", tags=["Claims"])
@@ -33,7 +34,7 @@ async def create_manual_claim(
     db: AsyncSession = Depends(get_db),
     current_worker: Worker = Depends(get_current_worker),
 ) -> Claim:
-    """Create a temporary manual claim and auto-approve it.
+    """Create a temporary manual claim and auto-disburse payout.
 
     NOTE: This endpoint is a temporary fallback while event-driven claim
     automation is being finalized.
@@ -66,7 +67,7 @@ async def create_manual_claim(
         event_type="manual",
         event_severity=payload.severity,
         event_description=f"Temporary manual claim created by worker (severity: {payload.severity})",
-        status="approved",
+        status="paid",
         payout_amount_inr=payout_amount,
         fraud_flag=None,
         triggered_at=datetime.now(timezone.utc),
@@ -75,18 +76,24 @@ async def create_manual_claim(
     db.add(claim)
     await db.flush()
 
+    payment_result = await disburse_payment(
+        claim_id=claim.id,
+        amount_inr=payout_amount,
+        payment_method="upi",
+    )
+
     payout = Payout(
         claim_id=claim.id,
         worker_id=current_worker.id,
-        amount_inr=payout_amount,
-        status="pending",
-        transaction_id=None,
+        amount_inr=payment_result.amount_inr,
+        status=payment_result.status,
+        transaction_id=payment_result.transaction_id,
         payment_method="upi",
-        processed_at=None,
+        processed_at=payment_result.processed_at,
     )
     db.add(payout)
 
-    await db.commit()
+    await db.flush()
     await db.refresh(claim)
     return claim
 

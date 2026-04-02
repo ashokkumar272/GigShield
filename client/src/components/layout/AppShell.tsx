@@ -10,7 +10,7 @@ type AppShellProps = {
 }
 
 export function AppShell({ mode, title, subtitle, children }: AppShellProps) {
-  const { profile, logout } = useAuth()
+  const { logout } = useAuth()
   const navItems = mode === 'admin' ? ADMIN_NAV_ITEMS : WORKER_NAV_ITEMS
 
   return (

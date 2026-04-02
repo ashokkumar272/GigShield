@@ -35,7 +35,7 @@ export function PoliciesPage() {
     try {
       setPolicies(await apiClient.getPolicies())
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Unable to load policies')
+      setError(loadError instanceof Error ? loadError.message : 'Unable to load plans')
     } finally {
       setLoading(false)
     }
@@ -60,7 +60,7 @@ export function PoliciesPage() {
         setRecommendationsError(
           loadRecommendationError instanceof Error
             ? loadRecommendationError.message
-            : 'Unable to load recommended plans',
+            : 'Unable to load suggested plans',
         )
       } finally {
         setRecommendationsLoading(false)
@@ -76,12 +76,12 @@ export function PoliciesPage() {
     setCreating(true)
     try {
       const created = await apiClient.createPolicy()
-      pushToast({ title: 'Policy created', description: `Policy ${created.id.slice(0, 8)}`, tone: 'success' })
+      pushToast({ title: 'Protection started', description: `Ref ${created.id.slice(0, 8)}`, tone: 'success' })
       setOpenCreateConfirm(false)
       void load()
     } catch (createError) {
       pushToast({
-        title: 'Could not create policy',
+        title: 'Could not start protection',
         description: createError instanceof Error ? createError.message : 'Try again',
         tone: 'error',
       })
@@ -91,27 +91,26 @@ export function PoliciesPage() {
   }
 
   const handleSelectRecommendation = async (recommendation: PolicyRecommendation) => {
-    setSelectingPlanName(recommendation.plan_name)
+    setSelectingPlanName(recommendation.plan_type)
     try {
       const created = await apiClient.createPolicyFromRecommendation({
         selected_recommendation: {
-          plan_name: recommendation.plan_name,
-          recommendation_score: recommendation.recommendation_score,
-          parameter_scores: recommendation.parameter_scores,
-          weekly_premium_inr: recommendation.weekly_premium_inr,
-          coverage_amount_inr: recommendation.coverage_amount_inr,
-          risk_score: recommendation.risk_score,
+          plan_type: recommendation.plan_type,
+          premium: recommendation.premium,
+          max_payout: recommendation.max_payout,
+          expected_payout: recommendation.expected_payout,
+          value_score: recommendation.value_score,
         },
       })
       pushToast({
-        title: 'Policy selected',
-        description: `${recommendation.plan_name} is now active (${created.id.slice(0, 8)})`,
+        title: 'Plan started',
+        description: `${recommendation.plan_type} is now active (${created.id.slice(0, 8)})`,
         tone: 'success',
       })
       void load()
     } catch (selectError) {
       pushToast({
-        title: 'Could not activate plan',
+        title: 'Could not start plan',
         description: selectError instanceof Error ? selectError.message : 'Try again',
         tone: 'error',
       })
@@ -130,15 +129,15 @@ export function PoliciesPage() {
       await apiClient.deletePolicy(selectedPolicy.id)
       setPolicies((current) => current.filter((item) => item.id !== selectedPolicy.id))
       pushToast({
-        title: 'Policy deleted',
-        description: `Policy ${selectedPolicy.id.slice(0, 8)} was removed`,
+        title: 'Plan removed',
+        description: `Ref ${selectedPolicy.id.slice(0, 8)} was removed`,
         tone: 'success',
       })
       setOpenDeleteConfirm(false)
       setSelectedPolicy(null)
     } catch (deleteError) {
       pushToast({
-        title: 'Could not delete policy',
+        title: 'Could not remove plan',
         description: deleteError instanceof Error ? deleteError.message : 'Try again',
         tone: 'error',
       })
@@ -148,27 +147,30 @@ export function PoliciesPage() {
   }
 
   return (
-    <AppShell mode="worker" title="Policies" subtitle="Create and review your weekly policy coverage.">
+    <AppShell mode="worker" title="Protection Plans" subtitle="Pick a plan. Stay safe this week.">
+      <section className="mb-4 rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-lime-50 p-4 shadow-sm">
+        <p className="text-sm font-semibold text-emerald-900">Choose once. Stay protected all week.</p>
+      </section>
       <div className="mb-3 flex justify-end">
         <button
           onClick={() => setOpenCreateConfirm(true)}
           className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:bg-slate-400"
           disabled={hasActive || policies.length === 0}
         >
-          Create Policy
+          Start Protection
         </button>
       </div>
       {policies.length === 0 && (
-        <p className="mb-3 text-xs text-slate-500">Select one recommended plan to activate your first policy.</p>
+        <p className="mb-3 text-xs text-slate-500">Pick one suggested plan to get protected.</p>
       )}
-      {hasActive && <p className="mb-3 text-xs text-slate-500">You already have an active policy.</p>}
+      {hasActive && <p className="mb-3 text-xs text-slate-500">You are already protected right now.</p>}
 
       {loading && <LoadingSkeleton lines={5} />}
-      {!loading && error && <RetryPanel title="Unable to load policies" message={error} onRetry={() => void load()} />}
+      {!loading && error && <RetryPanel title="Unable to load plans" message={error} onRetry={() => void load()} />}
       {!loading && !error && policies.length === 0 && recommendationsLoading && <LoadingSkeleton lines={4} />}
       {!loading && !error && policies.length === 0 && recommendationsError && (
         <RetryPanel
-          title="Unable to load recommended plans"
+          title="Unable to load suggested plans"
           message={recommendationsError}
           onRetry={() => {
             setRecommendations([])
@@ -181,38 +183,33 @@ export function PoliciesPage() {
         <div className="space-y-3">
           {forceRecommendationSelection && (
             <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-              Complete onboarding by selecting one recommended policy plan.
+              Finish setup by picking one suggested plan.
             </div>
           )}
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
             {recommendations.map((recommendation) => (
-              <div key={recommendation.plan_name} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div
+                key={recommendation.plan_type}
+                className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-lime-100/30 p-4 shadow-sm"
+              >
                 <div className="mb-2 flex items-start justify-between gap-3">
-                  <h3 className="text-base font-semibold text-slate-900">{recommendation.plan_name}</h3>
+                  <h3 className="text-base font-semibold text-slate-900">{recommendation.plan_type}</h3>
                   <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-800">
-                    Fit {recommendation.recommendation_score}
+                    Value {recommendation.value_score.toFixed(2)}
                   </span>
                 </div>
-                <p className="text-xs text-slate-600">{recommendation.summary}</p>
+                <p className="text-xs text-slate-600">{recommendation.why_recommended}</p>
                 <div className="mt-3 space-y-1 text-sm text-slate-700">
-                  <p>Weekly premium: Rs {recommendation.weekly_premium_inr.toFixed(2)}</p>
-                  <p>Coverage amount: Rs {recommendation.coverage_amount_inr.toFixed(2)}</p>
-                  <p>Risk score: {recommendation.risk_score}</p>
-                </div>
-                <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-slate-600">
-                  {Object.entries(recommendation.parameter_scores).map(([name, value]) => (
-                    <div key={name} className="rounded-lg bg-slate-100 px-2 py-1">
-                      <p className="font-medium text-slate-700">{name.replaceAll('_', ' ')}</p>
-                      <p>{value}</p>
-                    </div>
-                  ))}
+                  <p>Weekly cost: ₹{recommendation.premium.toFixed(2)}</p>
+                  <p>Max support: ₹{recommendation.max_payout.toFixed(2)}</p>
+                  <p>Likely support: ₹{recommendation.expected_payout.toFixed(2)}</p>
                 </div>
                 <button
                   className="mt-4 w-full rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white disabled:bg-slate-400"
                   onClick={() => void handleSelectRecommendation(recommendation)}
                   disabled={Boolean(selectingPlanName)}
                 >
-                  {selectingPlanName === recommendation.plan_name ? 'Selecting...' : 'Select this plan'}
+                  {selectingPlanName === recommendation.plan_type ? 'Starting...' : 'Choose this plan'}
                 </button>
               </div>
             ))}
@@ -237,9 +234,9 @@ export function PoliciesPage() {
 
       <ConfirmDialog
         open={openCreateConfirm}
-        title="Create new policy"
-        description="This creates a 7-day active policy using your current profile and pricing engine."
-        confirmLabel="Create"
+        title="Start protection"
+        description="This starts a 7-day protection plan from your current details."
+        confirmLabel="Start"
         onCancel={() => setOpenCreateConfirm(false)}
         onConfirm={() => void handleCreatePolicy()}
         loading={creating}
@@ -247,13 +244,13 @@ export function PoliciesPage() {
 
       <ConfirmDialog
         open={openDeleteConfirm}
-        title="Delete policy"
+        title="Remove plan"
         description={
           selectedPolicy
-            ? `Delete policy ${selectedPolicy.id.slice(0, 8)}? This action cannot be undone.`
-            : 'Delete this policy? This action cannot be undone.'
+            ? `Remove plan ${selectedPolicy.id.slice(0, 8)}? This cannot be undone.`
+            : 'Remove this plan? This cannot be undone.'
         }
-        confirmLabel="Delete"
+        confirmLabel="Remove"
         onCancel={() => {
           setOpenDeleteConfirm(false)
           setSelectedPolicy(null)
