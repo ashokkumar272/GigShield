@@ -32,5 +32,9 @@ class Settings(BaseSettings):
     razorpay_key_id: str = ""
     razorpay_key_secret: str = ""
 
+    # ── ML Inference ───────────────────────────────────────────────────────
+    ml_model_path: str = ""
+    ml_reference_data_path: str = ""
+
 
 settings = Settings()

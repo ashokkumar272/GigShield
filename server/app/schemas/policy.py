@@ -70,3 +70,30 @@ class PremiumBreakdownResponse(BaseModel):
     base_premium: float
     zone_risk_multiplier: float
     weather_risk_factor: float
+
+
+class SeverityPredictionRequest(BaseModel):
+    """Frontend payload used for severity model inference."""
+
+    distance_km: float = Field(..., ge=0)
+    weather_condition: str = Field(..., min_length=1, max_length=40)
+    traffic_level: str = Field(..., min_length=1, max_length=30)
+    vehicle_type: str = Field(..., min_length=1, max_length=30)
+    temperature_c: float
+    humidity_pct: float = Field(..., ge=0, le=100)
+    precipitation_mm: float = Field(..., ge=0)
+    preparation_time_min: float = Field(..., ge=0)
+    courier_experience_yrs: float = Field(..., ge=0)
+    worker_age: int = Field(..., ge=18, le=100)
+    worker_rating: float = Field(..., ge=0, le=5)
+    order_type: str = Field(..., min_length=1, max_length=40)
+    weather_risk: float = Field(..., ge=0)
+    traffic_risk: float = Field(..., ge=0)
+    severity_score: float
+
+
+class SeverityPredictionResponse(BaseModel):
+    """Severity prediction response returned by the ML endpoint."""
+
+    predicted_severity_score_scaled: float
+    predicted_severity_score: float | None = None

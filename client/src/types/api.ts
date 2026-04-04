@@ -92,6 +92,29 @@ export type PremiumBreakdownResponse = {
   weather_risk_factor: number
 }
 
+export type SeverityPredictionPayload = {
+  distance_km: number
+  weather_condition: string
+  traffic_level: string
+  vehicle_type: string
+  temperature_c: number
+  humidity_pct: number
+  precipitation_mm: number
+  preparation_time_min: number
+  courier_experience_yrs: number
+  worker_age: number
+  worker_rating: number
+  order_type: string
+  weather_risk: number
+  traffic_risk: number
+  severity_score: number
+}
+
+export type SeverityPredictionResponse = {
+  predicted_severity_score_scaled: number
+  predicted_severity_score: number | null
+}
+
 export type Policy = {
   id: string
   worker_id: string

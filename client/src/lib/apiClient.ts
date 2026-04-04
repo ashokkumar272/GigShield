@@ -12,6 +12,8 @@ import type {
   PolicyRecommendationResponse,
   PremiumBreakdownResponse,
   ProcessPayoutResponse,
+  SeverityPredictionPayload,
+  SeverityPredictionResponse,
   TokenResponse,
   WorkerDashboardResponse,
   WorkerLoginPayload,
@@ -90,6 +92,12 @@ export const apiClient = {
     request<PremiumBreakdownResponse>('/api/v1/pricing/calculate', {
       method: 'POST',
       auth: true,
+    }),
+  predictSeverity: (payload: SeverityPredictionPayload) =>
+    request<SeverityPredictionResponse>('/api/v1/pricing/predict-severity', {
+      method: 'POST',
+      auth: true,
+      body: JSON.stringify(payload),
     }),
   createPolicy: () =>
     request<Policy>('/api/v1/policies', {
