@@ -20,6 +20,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.claim import Claim
 from app.utils.constants import DUPLICATE_CLAIM_WINDOW_HOURS
 
+_FRAUD_FLAG_MAX_LEN = getattr(Claim.__table__.c.fraud_flag.type, "length", 100) or 100
+
+
+def _fit_fraud_flag(flag: str) -> str:
+    """Clamp fraud flags to the DB column limit to avoid insert failures."""
+    return flag[:_FRAUD_FLAG_MAX_LEN]
+
 
 async def check_duplicate_claim(
     db: AsyncSession,
@@ -47,10 +54,9 @@ async def check_duplicate_claim(
     existing = result.scalars().first()
 
     if existing is not None:
-        return (
-            f"DUPLICATE_CLAIM: Worker already has a {event_type} claim "
-            f"within the last {DUPLICATE_CLAIM_WINDOW_HOURS}h "
-            f"(claim_id={existing.id})"
+        return _fit_fraud_flag(
+            f"DUPLICATE_CLAIM_{DUPLICATE_CLAIM_WINDOW_HOURS}H:"
+            f"{event_type}:{existing.id}"
         )
     return None
 
@@ -99,11 +105,11 @@ async def run_fraud_checks(
     # Check 1: Duplicate claim within 48 h
     flag = await check_duplicate_claim(db, worker_id, event_type)
     if flag:
-        return flag
+        return _fit_fraud_flag(flag)
 
     # Check 2: GPS location mismatch
     flag = await check_location_mismatch(worker_id, city)
     if flag:
-        return flag
+        return _fit_fraud_flag(flag)
 
     return None

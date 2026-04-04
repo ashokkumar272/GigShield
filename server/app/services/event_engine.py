@@ -14,7 +14,7 @@ Phase 1 Triggers:
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.claim import Claim
@@ -79,6 +79,10 @@ async def process_event(
     Returns:
         List of created claim UUIDs.
     """
+    normalized_city = city.strip()
+    if not normalized_city:
+        return []
+
     if not evaluate_threshold(event_type, severity):
         return []
 
@@ -87,7 +91,7 @@ async def process_event(
         select(Policy)
         .join(Worker, Policy.worker_id == Worker.id)
         .where(
-            Worker.city.ilike(city),
+            func.lower(func.trim(Worker.city)) == normalized_city.lower(),
             Policy.status == "active",
         )
     )
@@ -101,7 +105,7 @@ async def process_event(
         fraud_flag = await run_fraud_checks(
             db=db,
             worker_id=policy.worker_id,
-            city=city,
+            city=normalized_city,
             event_type=event_type,
         )
 
@@ -120,7 +124,7 @@ async def process_event(
                 event_type=event_type,
                 event_severity=severity,
                 event_description=(
-                    f"{event_type.replace('_', ' ').title()} event in {city} — "
+                    f"{event_type.replace('_', ' ').title()} event in {normalized_city} — "
                     f"severity: {severity}"
                 ),
                 status="rejected",
@@ -134,7 +138,7 @@ async def process_event(
             continue
 
         event_description = (
-            f"{event_type.replace('_', ' ').title()} event in {city} — "
+            f"{event_type.replace('_', ' ').title()} event in {normalized_city} — "
             f"severity: {severity}"
         )
 

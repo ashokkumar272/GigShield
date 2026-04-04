@@ -67,11 +67,25 @@ export type ActivePolicySummary = {
   end_date: string | null
 }
 
+export type WorkerRiskToday = {
+  sample_index: number
+  weather_condition: string
+  traffic_level: string
+  precipitation_mm: number
+  event_type: 'rainfall' | 'aqi' | 'curfew_strike'
+  severity: 'low' | 'medium' | 'high' | 'critical'
+  threshold_crossed: boolean
+  claims_created: number
+  claim_ids: string[]
+  note: string | null
+}
+
 export type WorkerDashboardResponse = {
   active_policy: ActivePolicySummary | null
   income_protected_this_week: number
   claims_this_month: number
   payout_total: number
+  risk_today: WorkerRiskToday
 }
 
 export type AdminDashboardResponse = {

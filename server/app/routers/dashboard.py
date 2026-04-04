@@ -14,6 +14,7 @@ from app.models.claim import Claim
 from app.models.payout import Payout
 from app.models.policy import Policy
 from app.models.worker import Worker
+from app.services.mock_event_simulator import next_worker_risk_snapshot
 from app.utils.deps import get_current_worker, get_db
 
 router = APIRouter(prefix="/api/v1/dashboard", tags=["Dashboard"])
@@ -62,6 +63,12 @@ async def worker_dashboard(
     )
     payout_total = payout_result.scalar() or 0.0
 
+    risk_today = await next_worker_risk_snapshot(
+        db=db,
+        worker=current_worker,
+        active_policy=active_policy,
+    )
+
     return {
         "active_policy": {
             "id": str(active_policy.id),
@@ -77,6 +84,7 @@ async def worker_dashboard(
         else 0.0,
         "claims_this_month": claims_this_month,
         "payout_total": float(payout_total),
+        "risk_today": risk_today,
     }
 
 

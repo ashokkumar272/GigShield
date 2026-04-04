@@ -21,7 +21,8 @@ import type {
   WorkerRegisterPayload,
 } from '../types/api'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ?? `${window.location.protocol}//${window.location.hostname}:8000`
 
 export class ApiError extends Error implements ApiErrorShape {
   status: number

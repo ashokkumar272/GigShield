@@ -38,10 +38,13 @@ export function PayoutsPage() {
   }, [payouts, page])
 
   return (
-    <AppShell mode="worker" title="Money History" subtitle="See money we sent to you.">
-      <section className="mb-4 rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-50 to-blue-50 p-4 shadow-sm">
-        <p className="text-sm font-semibold text-sky-900">Every transfer is tracked clearly for you.</p>
-      </section>
+    <AppShell
+      mode="worker"
+      title="Money History"
+      subtitle="See money we sent to you."
+      bannerText="Every transfer is tracked clearly for you."
+      bannerTone="sky"
+    >
       {loading && <LoadingSkeleton lines={5} />}
       {!loading && error && <RetryPanel title="Unable to load money history" message={error} onRetry={() => void load()} />}
       {!loading && !error && payouts.length === 0 && (

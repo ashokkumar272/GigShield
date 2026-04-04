@@ -21,7 +21,13 @@ export function AdminEventsPage() {
   }
 
   return (
-    <AppShell mode="admin" title="Event Trigger Console" subtitle="Trigger rainfall, AQI, and curfew events manually.">
+    <AppShell
+      mode="admin"
+      title="Event Trigger Console"
+      subtitle="Trigger rainfall, AQI, and curfew events manually."
+      bannerText="Trigger disruptions safely in one console."
+      bannerTone="rose"
+    >
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <EventTriggerForm onSubmit={onSubmit} onSuccess={setResult} />
         <EventResultPanel result={result} />

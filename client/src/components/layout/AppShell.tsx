@@ -6,10 +6,20 @@ type AppShellProps = {
   mode: 'worker' | 'admin'
   title: string
   subtitle?: string
+  bannerText?: string
+  bannerTone?: 'emerald' | 'amber' | 'sky' | 'indigo' | 'rose'
   children: React.ReactNode
 }
 
-export function AppShell({ mode, title, subtitle, children }: AppShellProps) {
+const bannerStyles: Record<NonNullable<AppShellProps['bannerTone']>, string> = {
+  emerald: 'border-emerald-200 bg-gradient-to-r from-emerald-50 via-lime-50 to-teal-50 text-emerald-950',
+  amber: 'border-amber-200 bg-gradient-to-r from-amber-50 via-orange-50 to-yellow-50 text-amber-950',
+  sky: 'border-sky-200 bg-gradient-to-r from-sky-50 via-cyan-50 to-blue-50 text-sky-950',
+  indigo: 'border-indigo-200 bg-gradient-to-r from-indigo-50 via-violet-50 to-cyan-50 text-indigo-950',
+  rose: 'border-rose-200 bg-gradient-to-r from-rose-50 via-pink-50 to-orange-50 text-rose-950',
+}
+
+export function AppShell({ mode, title, subtitle, bannerText, bannerTone = 'emerald', children }: AppShellProps) {
   const { logout } = useAuth()
   const navItems = mode === 'admin' ? ADMIN_NAV_ITEMS : WORKER_NAV_ITEMS
 
@@ -83,6 +93,15 @@ export function AppShell({ mode, title, subtitle, children }: AppShellProps) {
               </button>
             </div>
           </header>
+
+          {bannerText && (
+            <section
+              className={`rounded-3xl border p-5 shadow-sm sm:p-6 ${bannerStyles[bannerTone]}`}
+            >
+              <p className="text-lg font-semibold leading-8 sm:text-xl">{bannerText}</p>
+            </section>
+          )}
+
           <main>{children}</main>
         </section>
       </div>

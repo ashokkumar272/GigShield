@@ -28,6 +28,11 @@ class EventTrigger(BaseModel):
     )
     timestamp: datetime = Field(..., description="When the event occurred")
 
+    @field_validator("city", mode="before")
+    @classmethod
+    def strip_city(cls, value: str) -> str:
+        return value.strip() if isinstance(value, str) else value
+
 
 class ManualClaimCreate(BaseModel):
     """Payload for temporary manual claim creation by worker."""
@@ -81,3 +86,55 @@ class EventTriggerResponse(BaseModel):
     severity: str
     claims_created: int
     claim_ids: list[uuid.UUID]
+
+
+class MockEventSimulationRequest(BaseModel):
+    """Payload to run random mock event triggers."""
+
+    max_events: int = Field(
+        default=8,
+        ge=1,
+        le=20,
+        description="How many random mock events to process in sequence",
+    )
+    seed: int | None = Field(
+        default=None,
+        description="Optional random seed for deterministic ordering",
+    )
+
+
+class MockEventItem(BaseModel):
+    """A single mock disruption data point used by the simulator."""
+
+    sample_index: int
+    event_type: str = Field(..., pattern=r"^(rainfall|aqi|curfew_strike)$")
+    city: str
+    severity: str = Field(..., pattern=r"^(low|medium|high|critical)$")
+    timestamp: datetime
+    threshold_crossed: bool
+    weather_condition: str
+    traffic_level: str
+    precipitation_mm: float
+    aqi_value: int | None = None
+    curfew_strike: bool | None = None
+
+
+class MockEventSimulationStep(MockEventItem):
+    """Simulation output for one processed event."""
+
+    sequence_index: int
+    claims_created: int
+    claim_ids: list[uuid.UUID]
+
+
+class MockEventSimulationResponse(BaseModel):
+    """Detailed response from mock event simulation."""
+
+    parameters_used: list[str]
+    threshold_rules: dict[str, str]
+    mock_data: list[MockEventItem]
+    triggered_sequence: list[MockEventSimulationStep]
+    first_threshold_cross_index: int | None = None
+    first_claim_creation_index: int | None = None
+    total_claims_created: int
+    note: str | None = None

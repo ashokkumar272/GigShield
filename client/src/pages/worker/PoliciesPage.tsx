@@ -147,10 +147,13 @@ export function PoliciesPage() {
   }
 
   return (
-    <AppShell mode="worker" title="Protection Plans" subtitle="Pick a plan. Stay safe this week.">
-      <section className="mb-4 rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-lime-50 p-4 shadow-sm">
-        <p className="text-sm font-semibold text-emerald-900">Choose once. Stay protected all week.</p>
-      </section>
+    <AppShell
+      mode="worker"
+      title="Protection Plans"
+      subtitle="Pick a plan. Stay safe this week."
+      bannerText="Choose once. Stay protected all week."
+      bannerTone="emerald"
+    >
       <div className="mb-3 flex justify-end">
         <button
           onClick={() => setOpenCreateConfirm(true)}

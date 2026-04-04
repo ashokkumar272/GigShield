@@ -34,13 +34,16 @@ export function ClaimDetailPage() {
   }, [load])
 
   return (
-    <AppShell mode="worker" title="Support Details" subtitle="Check status and money updates.">
+    <AppShell
+      mode="worker"
+      title="Support Details"
+      subtitle="Check status and money updates."
+      bannerText="You can track each support event clearly."
+      bannerTone="amber"
+    >
       <button onClick={() => navigate(-1)} className="mb-3 text-sm font-medium text-slate-700 hover:underline">
         Back
       </button>
-      <section className="mb-4 rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-4 shadow-sm">
-        <p className="text-sm font-semibold text-amber-900">You can track each support event clearly.</p>
-      </section>
       {loading && <LoadingSkeleton lines={4} />}
       {!loading && error && <ErrorState message={error} />}
       {!loading && !error && claim && (

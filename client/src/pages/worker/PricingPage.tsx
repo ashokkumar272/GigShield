@@ -87,10 +87,13 @@ export function PricingPage() {
   }
 
   return (
-    <AppShell mode="worker" title="Weekly Cost" subtitle="Simple view of your weekly amount.">
-      <section className="mb-4 rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-50 to-cyan-50 p-4 shadow-sm">
-        <p className="text-sm font-semibold text-indigo-900">Easy weekly cost and severity risk prediction from your live inputs.</p>
-      </section>
+    <AppShell
+      mode="worker"
+      title="Weekly Cost"
+      subtitle="Simple view of your weekly amount."
+      bannerText="Easy weekly cost and severity risk prediction from your live inputs."
+      bannerTone="indigo"
+    >
       {loading && <LoadingSkeleton lines={5} />}
       {!loading && error && <RetryPanel title="Unable to load weekly cost" message={error} onRetry={() => void load()} />}
       {!loading && !error && data && <PremiumBreakdownCard data={data} />}

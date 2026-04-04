@@ -27,13 +27,16 @@ export function PolicyDetailPage() {
   }, [id])
 
   return (
-    <AppShell mode="worker" title="Plan Details" subtitle="Your protection details for this week.">
+    <AppShell
+      mode="worker"
+      title="Plan Details"
+      subtitle="Your protection details for this week."
+      bannerText="Your plan is active for this week."
+      bannerTone="emerald"
+    >
       <button onClick={() => navigate(-1)} className="mb-3 text-sm font-medium text-slate-700 hover:underline">
         Back
       </button>
-      <section className="mb-4 rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-lime-50 p-4 shadow-sm">
-        <p className="text-sm font-semibold text-emerald-900">Your plan is active for this week.</p>
-      </section>
       {loading && <LoadingSkeleton lines={4} />}
       {!loading && error && <ErrorState message={error} />}
       {!loading && !error && policy && (

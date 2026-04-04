@@ -29,7 +29,13 @@ export function AdminDashboardPage() {
   }, [])
 
   return (
-    <AppShell mode="admin" title="Admin Dashboard" subtitle="Platform-wide metrics for operations teams.">
+    <AppShell
+      mode="admin"
+      title="Admin Dashboard"
+      subtitle="Platform-wide metrics for operations teams."
+      bannerText="Operations stay visible in one place."
+      bannerTone="indigo"
+    >
       {loading && <LoadingSkeleton lines={6} />}
       {!loading && error && <RetryPanel title="Unable to load admin metrics" message={error} onRetry={() => void load()} />}
       {!loading && !error && data && (

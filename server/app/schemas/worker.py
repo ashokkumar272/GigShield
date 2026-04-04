@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 # ── Requests ────────────────────────────────────────────────────────────────
@@ -25,6 +25,11 @@ class WorkerRegister(BaseModel):
     vehicle_type: str = Field(
         ..., pattern=r"^(bike|scooter|cycle)$", examples=["bike"]
     )
+
+    @field_validator("name", "phone", "city", "pincode", mode="before")
+    @classmethod
+    def strip_text_fields(cls, value: str) -> str:
+        return value.strip() if isinstance(value, str) else value
 
 
 class WorkerLogin(BaseModel):
