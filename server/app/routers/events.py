@@ -8,8 +8,14 @@ parametric insurance trigger pipeline.
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schemas.claim import EventTrigger, EventTriggerResponse
+from app.schemas.claim import (
+    EventTrigger,
+    EventTriggerResponse,
+    MockEventSimulationRequest,
+    MockEventSimulationResponse,
+)
 from app.services.event_engine import process_event
+from app.services.mock_event_simulator import run_mock_event_simulation
 from app.utils.deps import get_db
 
 router = APIRouter(prefix="/api/v1/events", tags=["Events"])
@@ -51,3 +57,24 @@ async def trigger_event(
         "claims_created": len(claim_ids),
         "claim_ids": claim_ids,
     }
+
+
+@router.post(
+    "/simulate/mock",
+    response_model=MockEventSimulationResponse,
+    summary="Run random mock events and auto-trigger claims",
+)
+async def simulate_mock_events(
+    payload: MockEventSimulationRequest,
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Run randomized mock event data through the auto-claim pipeline.
+
+    This endpoint is for local/demo environments where real external APIs
+    (weather/AQI/municipal alerts) are not connected yet.
+    """
+    return await run_mock_event_simulation(
+        db=db,
+        max_events=payload.max_events,
+        seed=payload.seed,
+    )
