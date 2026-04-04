@@ -93,6 +93,7 @@ weekly_premium = base_premium × zone_risk_multiplier × weather_risk_factor
 | `GET` | `/api/v1/policies/me` | Yes | List all policies for worker |
 | `GET` | `/api/v1/policies/{policy_id}` | Yes | Get policy detail |
 | `POST` | `/api/v1/events/trigger` | No* | Ingest disruption event → auto-create claims |
+| `POST` | `/api/v1/events/simulate/mock` | No* | Run randomized mock disruptions through the same auto-claim pipeline |
 | `GET` | `/api/v1/claims/me` | Yes | List all claims for worker |
 | `GET` | `/api/v1/claims/{claim_id}` | Yes | Get claim detail |
 | `GET` | `/api/v1/payouts/me` | Yes | List payout history |
@@ -101,6 +102,43 @@ weekly_premium = base_premium × zone_risk_multiplier × weather_risk_factor
 | `GET` | `/api/v1/dashboard/admin` | No* | Admin dashboard summary |
 
 *\*Admin endpoints are open in Phase 1 — role-based access control is planned for Phase 2.*
+
+### New Feature: Mock Risk Simulation & Live Risk Ticker
+
+GigShield now includes a deterministic, policy-aware mock event simulator for local/demo environments and a worker-facing live risk ticker.
+
+**Simulator endpoint:** `POST /api/v1/events/simulate/mock`
+
+- Uses synthetic risk signals (`weather_condition`, `traffic_level`, `precipitation_mm`) and maps them to parametric events (`rainfall`, `aqi`, `curfew_strike`).
+- Randomizes event order with optional `seed` support for reproducible demos.
+- Guarantees at least one threshold-crossing event in the selected sequence so trigger logic can be validated.
+- Executes each event through the same production event engine used by `/api/v1/events/trigger`.
+
+Request body:
+
+```json
+{
+"max_events": 8,
+"seed": 7
+}
+```
+
+Response highlights:
+
+- `mock_data`: generated source events before shuffle
+- `triggered_sequence`: processed events with `claims_created` and `claim_ids`
+- `first_threshold_cross_index`: first sequence step where thresholds were crossed
+- `first_claim_creation_index`: first sequence step that created a claim
+- `total_claims_created`: total claims created across the run
+
+**Worker dashboard live ticker (`GET /api/v1/dashboard/worker`):**
+
+- Adds `risk_today` with rotating weather/traffic/precipitation values.
+- Designed for client polling (current UI refreshes every 8 seconds).
+- Policy-scoped behavior with three rules.
+- No active policy: ticker stays idle.
+- Claim already exists for active policy: ticker pauses for that policy.
+- New active policy selected: ticker restarts from simulation step 1.
 
 ---
  
@@ -186,6 +224,16 @@ worker_rating_history → LSTM trajectory model
 - JWT authentication with OTP stub
 - Worker & admin dashboards
 - Docker Compose + PostgreSQL
+
+## Future Additions
+
+1. **Fraud avoidance while onboarding (high priority).**
+2. **Real location verification** to validate the worker's live location against declared onboarding city/zone.
+3. **Video verification of active worker status during onboarding (via screenshare)** by showing the worker profile in rider apps like Zomato or the Swiggy delivery partner app.
+4. **Standard insurance exclusions framework** covering policy exclusions such as war, pandemic/epidemic, and terrorism.
+5. **Actuarial sustainability modeling** including premium adequacy checks, expected-loss forecasting, reserve planning, and portfolio loss-ratio analysis.
+6. **Expanded disruption scenario library** beyond weather/pollution (for example fuel shortage, platform outage, transport shutdown, civic unrest, and localized public health spikes).
+7. **Accessibility-first worker experience** with vernacular language support, low-digital-literacy onboarding flows, and assisted guidance for policy and claim journeys.
 
 
 ---
