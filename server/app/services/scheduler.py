@@ -60,13 +60,28 @@ async def weekly_premium_burn() -> None:
                 policy.worker_id,
             )
 
+        scheduled_result = await session.execute(
+            select(Policy).where(Policy.status == "scheduled")
+        )
+        scheduled_policies = scheduled_result.scalars().all()
+        activated_count = 0
+        for policy in scheduled_policies:
+            if policy.end_date and policy.end_date < now:
+                policy.status = "expired"
+                expired_count += 1
+                continue
+            if policy.start_date <= now:
+                policy.status = "active"
+                activated_count += 1
+
         await session.commit()
 
     logger.info(
-        "Weekly burn complete: ₹%.2f total from %d policies, %d expired",
+        "Weekly burn complete: ₹%.2f total from %d policies, %d expired, %d activated",
         total_burn,
         len(active_policies) - expired_count,
         expired_count,
+        activated_count,
     )
 
 

@@ -163,6 +163,40 @@ export function WorkerDashboardPage() {
               </section>
             )}
 
+            {data?.renewal.should_notify && (
+              <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm shadow-sm">
+                <p className="font-semibold text-amber-900">Buy next week plan now</p>
+                <p className="mt-1 text-amber-800">
+                  Next coverage starts {formatDate(data.renewal.next_coverage_start)}. Book before {formatDate(data.renewal.purchase_cutoff)}.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => navigate(ROUTES.policies)}
+                  className="mt-3 rounded-xl bg-amber-700 px-3 py-2 text-sm font-semibold text-white hover:bg-amber-800"
+                >
+                  Choose next week plan
+                </button>
+              </section>
+            )}
+
+            {!data?.renewal.can_purchase_next_week && !data?.renewal.already_purchased_next_week && (
+              <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm shadow-sm">
+                <p className="font-semibold text-slate-800">Next week booking is currently closed</p>
+                <p className="mt-1 text-slate-700">
+                  You can buy again after the weekly coverage resets.
+                </p>
+              </section>
+            )}
+
+            {data?.renewal.already_purchased_next_week && (
+              <section className="rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sm shadow-sm">
+                <p className="font-semibold text-sky-900">Next week plan already booked</p>
+                <p className="mt-1 text-sky-800">
+                  Upcoming coverage starts {formatDate(data.renewal.next_coverage_start)}.
+                </p>
+              </section>
+            )}
+
             <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
               <h3 className="text-lg font-bold text-slate-900">Risks today</h3>
               <p className="mt-1 text-sm text-slate-600">We watch your area all day.</p>

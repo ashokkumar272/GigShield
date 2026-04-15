@@ -13,6 +13,21 @@ from app.models.worker import Worker
 from app.utils.auth import create_access_token, hash_otp
 
 
+async def _force_activate_policy(
+    db_session: AsyncSession,
+    policy_id: str,
+) -> None:
+    """Force a just-created weekly policy into currently-active state for event tests."""
+    policy = await db_session.get(Policy, uuid.UUID(policy_id))
+    assert policy is not None
+
+    now = datetime.now(timezone.utc)
+    policy.status = "active"
+    policy.start_date = now - timedelta(minutes=5)
+    policy.end_date = now + timedelta(days=6, hours=23, minutes=59)
+    await db_session.commit()
+
+
 @pytest.mark.asyncio
 async def test_event_trigger_creates_claim(
     client: AsyncClient,
@@ -53,8 +68,9 @@ async def test_event_trigger_creates_claim(
     policy_resp = await client.post("/api/v1/policies", headers=headers)
     assert policy_resp.status_code == 201
     policy_data = policy_resp.json()
-    assert policy_data["status"] == "active"
+    assert policy_data["status"] == "scheduled"
     assert policy_data["coverage_amount_inr"] == 6400.0  # 8000 × 0.80
+    await _force_activate_policy(db_session=db_session, policy_id=policy_data["id"])
 
     # Step 3: Trigger event
     event_resp = await client.post(
@@ -92,6 +108,7 @@ async def test_event_trigger_creates_claim(
 @pytest.mark.asyncio
 async def test_low_severity_event_no_claims(
     client: AsyncClient,
+    db_session: AsyncSession,
 ) -> None:
     """Test that low-severity events do NOT create claims."""
     # Register and create policy
@@ -116,7 +133,12 @@ async def test_low_severity_event_no_claims(
     token = login_resp.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    await client.post("/api/v1/policies", headers=headers)
+    created_policy = await client.post("/api/v1/policies", headers=headers)
+    assert created_policy.status_code == 201
+    await _force_activate_policy(
+        db_session=db_session,
+        policy_id=created_policy.json()["id"],
+    )
 
     # Trigger low-severity event
     event_resp = await client.post(
@@ -135,6 +157,7 @@ async def test_low_severity_event_no_claims(
 @pytest.mark.asyncio
 async def test_duplicate_claim_flag_does_not_overflow_column(
     client: AsyncClient,
+    db_session: AsyncSession,
 ) -> None:
     """Second trigger in 48h should create a rejected claim without DB truncation errors."""
     reg_resp = await client.post(
@@ -160,6 +183,10 @@ async def test_duplicate_claim_flag_does_not_overflow_column(
 
     policy_resp = await client.post("/api/v1/policies", headers=headers)
     assert policy_resp.status_code == 201
+    await _force_activate_policy(
+        db_session=db_session,
+        policy_id=policy_resp.json()["id"],
+    )
 
     first_event_resp = await client.post(
         "/api/v1/events/trigger",
@@ -233,6 +260,10 @@ async def test_event_trigger_matches_city_with_whitespace_and_case(
 
     policy_resp = await client.post("/api/v1/policies", headers=headers)
     assert policy_resp.status_code == 201
+    await _force_activate_policy(
+        db_session=db_session,
+        policy_id=policy_resp.json()["id"],
+    )
 
     worker = await db_session.get(Worker, uuid.UUID(worker_id))
     assert worker is not None
@@ -255,6 +286,7 @@ async def test_event_trigger_matches_city_with_whitespace_and_case(
 @pytest.mark.asyncio
 async def test_mock_simulation_randomly_triggers_and_creates_claims(
     client: AsyncClient,
+    db_session: AsyncSession,
 ) -> None:
     """Simulation endpoint should eventually cross threshold and create claims."""
     reg_resp = await client.post(
@@ -280,6 +312,10 @@ async def test_mock_simulation_randomly_triggers_and_creates_claims(
 
     policy_resp = await client.post("/api/v1/policies", headers=headers)
     assert policy_resp.status_code == 201
+    await _force_activate_policy(
+        db_session=db_session,
+        policy_id=policy_resp.json()["id"],
+    )
 
     sim_resp = await client.post(
         "/api/v1/events/simulate/mock",
@@ -340,6 +376,7 @@ async def test_dashboard_simulator_pauses_after_claim_and_restarts_on_new_policy
     first_policy_resp = await client.post("/api/v1/policies", headers=headers)
     assert first_policy_resp.status_code == 201
     first_policy_id = first_policy_resp.json()["id"]
+    await _force_activate_policy(db_session=db_session, policy_id=first_policy_id)
 
     triggered_snapshot = None
     for _ in range(8):
@@ -366,6 +403,10 @@ async def test_dashboard_simulator_pauses_after_claim_and_restarts_on_new_policy
 
     second_policy_resp = await client.post("/api/v1/policies", headers=headers)
     assert second_policy_resp.status_code == 201
+    await _force_activate_policy(
+        db_session=db_session,
+        policy_id=second_policy_resp.json()["id"],
+    )
 
     resumed_resp = await client.get("/api/v1/dashboard/worker", headers=headers)
     assert resumed_resp.status_code == 200

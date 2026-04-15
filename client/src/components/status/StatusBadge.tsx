@@ -2,6 +2,7 @@ import { toTitleCase } from '../../lib/format'
 
 const COLOR_MAP: Record<string, string> = {
   active: 'bg-emerald-100 text-emerald-800',
+  scheduled: 'bg-sky-100 text-sky-800',
   expired: 'bg-slate-200 text-slate-700',
   cancelled: 'bg-amber-100 text-amber-800',
   pending: 'bg-amber-100 text-amber-800',

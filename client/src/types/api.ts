@@ -80,12 +80,23 @@ export type WorkerRiskToday = {
   note: string | null
 }
 
+export type RenewalWindow = {
+  next_coverage_start: string
+  next_coverage_end: string
+  purchase_cutoff: string
+  can_purchase_next_week: boolean
+  already_purchased_next_week: boolean
+  should_notify: boolean
+  upcoming_policy_id: string | null
+}
+
 export type WorkerDashboardResponse = {
   active_policy: ActivePolicySummary | null
   income_protected_this_week: number
   claims_this_month: number
   payout_total: number
   risk_today: WorkerRiskToday
+  renewal: RenewalWindow
 }
 
 export type AdminDashboardResponse = {

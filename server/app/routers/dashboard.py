@@ -14,6 +14,13 @@ from app.models.claim import Claim
 from app.models.payout import Payout
 from app.models.policy import Policy
 from app.models.worker import Worker
+from app.services.policy_window import (
+    can_purchase_for_start,
+    coverage_end_for_start,
+    next_coverage_start,
+    purchase_cutoff_for_start,
+    sync_worker_policy_statuses,
+)
 from app.services.mock_event_simulator import next_worker_risk_snapshot
 from app.utils.deps import get_current_worker, get_db
 
@@ -33,14 +40,37 @@ async def worker_dashboard(
     - Claims this month
     - Total payouts received
     """
+    now = datetime.now(timezone.utc)
+    await sync_worker_policy_statuses(db=db, worker_id=current_worker.id, reference=now)
+
     # Active policy
     policy_result = await db.execute(
         select(Policy).where(
             Policy.worker_id == current_worker.id,
             Policy.status == "active",
+            Policy.start_date <= now,
+            ((Policy.end_date.is_(None)) | (Policy.end_date >= now)),
         )
     )
     active_policy = policy_result.scalar_one_or_none()
+
+    next_week_start = next_coverage_start(now)
+    next_week_end = coverage_end_for_start(next_week_start)
+    purchase_cutoff = purchase_cutoff_for_start(next_week_start)
+
+    upcoming_result = await db.execute(
+        select(Policy).where(
+            Policy.worker_id == current_worker.id,
+            Policy.status.in_(["active", "scheduled"]),
+            Policy.start_date == next_week_start,
+        )
+    )
+    upcoming_policy = upcoming_result.scalar_one_or_none()
+
+    can_buy_next_week = can_purchase_for_start(now, next_week_start)
+    should_notify_renewal = (
+        active_policy is not None and can_buy_next_week and upcoming_policy is None
+    )
 
     # Claims this month
     month_start = datetime.now(timezone.utc).replace(
@@ -85,6 +115,15 @@ async def worker_dashboard(
         "claims_this_month": claims_this_month,
         "payout_total": float(payout_total),
         "risk_today": risk_today,
+        "renewal": {
+            "next_coverage_start": next_week_start.isoformat(),
+            "next_coverage_end": next_week_end.isoformat(),
+            "purchase_cutoff": purchase_cutoff.isoformat(),
+            "can_purchase_next_week": can_buy_next_week,
+            "already_purchased_next_week": upcoming_policy is not None,
+            "should_notify": should_notify_renewal,
+            "upcoming_policy_id": str(upcoming_policy.id) if upcoming_policy else None,
+        },
     }
 
 

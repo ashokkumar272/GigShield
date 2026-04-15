@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { AppShell } from '../../components/layout/AppShell'
 import { apiClient } from '../../lib/apiClient'
-import type { Policy, PolicyRecommendation } from '../../types/api'
+import type { Policy, PolicyRecommendation, RenewalWindow } from '../../types/api'
 import { ROUTES } from '../../app/routes'
 import { PolicyCard } from '../../components/worker/PolicyCard'
 import { LoadingSkeleton } from '../../components/state/LoadingSkeleton'
@@ -20,6 +20,7 @@ export function PoliciesPage() {
   const [recommendations, setRecommendations] = useState<PolicyRecommendation[]>([])
   const [recommendationsLoading, setRecommendationsLoading] = useState(false)
   const [recommendationsError, setRecommendationsError] = useState('')
+  const [renewal, setRenewal] = useState<RenewalWindow | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [openCreateConfirm, setOpenCreateConfirm] = useState(false)
@@ -33,7 +34,9 @@ export function PoliciesPage() {
     setError('')
     setLoading(true)
     try {
-      setPolicies(await apiClient.getPolicies())
+      const [policyList, dashboard] = await Promise.all([apiClient.getPolicies(), apiClient.getWorkerDashboard()])
+      setPolicies(policyList)
+      setRenewal(dashboard.renewal)
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to load plans')
     } finally {
@@ -46,7 +49,8 @@ export function PoliciesPage() {
   }, [])
 
   useEffect(() => {
-    if (loading || policies.length > 0) {
+    const hasScheduled = policies.some((item) => item.status === 'scheduled')
+    if (loading || hasScheduled || !renewal?.can_purchase_next_week) {
       return
     }
 
@@ -68,9 +72,12 @@ export function PoliciesPage() {
     }
 
     void loadRecommendations()
-  }, [loading, policies.length])
+  }, [loading, policies, renewal?.can_purchase_next_week])
 
   const hasActive = useMemo(() => policies.some((item) => item.status === 'active'), [policies])
+  const hasScheduled = useMemo(() => policies.some((item) => item.status === 'scheduled'), [policies])
+  const canBuyNextWeek = renewal?.can_purchase_next_week ?? false
+  const shouldShowRecommendations = canBuyNextWeek && !hasScheduled
 
   const handleCreatePolicy = async () => {
     setCreating(true)
@@ -158,20 +165,35 @@ export function PoliciesPage() {
         <button
           onClick={() => setOpenCreateConfirm(true)}
           className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:bg-slate-400"
-          disabled={hasActive || policies.length === 0}
+          disabled={!canBuyNextWeek || hasScheduled}
         >
           Start Protection
         </button>
       </div>
-      {policies.length === 0 && (
+      {!loading && !error && renewal?.should_notify && (
+        <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Your current plan is active. Buy next week's plan before {new Date(renewal.purchase_cutoff).toLocaleString()}.
+        </div>
+      )}
+      {!loading && !error && !canBuyNextWeek && !hasScheduled && (
+        <div className="mb-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+          Buying is closed in the final 24 hours before coverage start. Purchase opens again for the next cycle after this window.
+        </div>
+      )}
+      {!loading && !error && hasScheduled && (
+        <div className="mb-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
+          Next week's plan is already booked.
+        </div>
+      )}
+      {policies.length === 0 && shouldShowRecommendations && (
         <p className="mb-3 text-xs text-slate-500">Pick one suggested plan to get protected.</p>
       )}
-      {hasActive && <p className="mb-3 text-xs text-slate-500">You are already protected right now.</p>}
+      {hasActive && <p className="mb-3 text-xs text-slate-500">You are protected for this week.</p>}
 
       {loading && <LoadingSkeleton lines={5} />}
       {!loading && error && <RetryPanel title="Unable to load plans" message={error} onRetry={() => void load()} />}
-      {!loading && !error && policies.length === 0 && recommendationsLoading && <LoadingSkeleton lines={4} />}
-      {!loading && !error && policies.length === 0 && recommendationsError && (
+      {!loading && !error && shouldShowRecommendations && recommendationsLoading && <LoadingSkeleton lines={4} />}
+      {!loading && !error && shouldShowRecommendations && recommendationsError && (
         <RetryPanel
           title="Unable to load suggested plans"
           message={recommendationsError}
@@ -182,13 +204,14 @@ export function PoliciesPage() {
           }}
         />
       )}
-      {!loading && !error && policies.length === 0 && !recommendationsLoading && !recommendationsError && (
+      {!loading && !error && shouldShowRecommendations && !recommendationsLoading && !recommendationsError && (
         <div className="space-y-3">
           {forceRecommendationSelection && (
             <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
               Finish setup by picking one suggested plan.
             </div>
           )}
+          <p className="text-xs text-slate-500">Choose a plan for the upcoming Monday to Sunday coverage window.</p>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
             {recommendations.map((recommendation) => (
               <div
@@ -210,7 +233,7 @@ export function PoliciesPage() {
                 <button
                   className="mt-4 w-full rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white disabled:bg-slate-400"
                   onClick={() => void handleSelectRecommendation(recommendation)}
-                  disabled={Boolean(selectingPlanName)}
+                  disabled={Boolean(selectingPlanName) || !canBuyNextWeek}
                 >
                   {selectingPlanName === recommendation.plan_type ? 'Starting...' : 'Choose this plan'}
                 </button>

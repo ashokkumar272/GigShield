@@ -5,6 +5,7 @@ so that business rules are easy to audit and adjust.
 """
 
 from dataclasses import dataclass
+from datetime import timedelta
 
 # ── Parametric Trigger Thresholds ───────────────────────────────────────────
 
@@ -55,6 +56,18 @@ SEVERITY_PAYOUT_RATIOS: dict[str, float] = {
 # ── Fraud Detection ────────────────────────────────────────────────────────
 
 DUPLICATE_CLAIM_WINDOW_HOURS = 48
+
+# ── Policy Purchase Window ────────────────────────────────────────────────
+
+# Coverage always starts on Monday 00:00 UTC and ends on Sunday 23:59:59 UTC.
+POLICY_COVERAGE_START_WEEKDAY = 0  # Monday = 0, Sunday = 6
+POLICY_COVERAGE_START_HOUR = 0
+POLICY_COVERAGE_START_MINUTE = 0
+POLICY_COVERAGE_START_SECOND = 0
+POLICY_COVERAGE_DURATION = timedelta(days=7)
+
+# Worker must buy at least this many hours before coverage start.
+POLICY_MIN_PURCHASE_LEAD_HOURS = 24
 
 
 @dataclass(frozen=True)

@@ -137,10 +137,15 @@ def _next_signal_for_policy(cursor_key: str) -> tuple[int, RiskSignalInput]:
 
 async def _active_policy_cities(db: AsyncSession) -> list[str]:
     """Return distinct worker cities that currently have active policies."""
+    now = datetime.now(timezone.utc)
     stmt = (
         select(Worker.city)
         .join(Policy, Policy.worker_id == Worker.id)
-        .where(Policy.status == "active")
+        .where(
+            Policy.status == "active",
+            Policy.start_date <= now,
+            ((Policy.end_date.is_(None)) | (Policy.end_date >= now)),
+        )
         .distinct()
     )
     result = await db.execute(stmt)

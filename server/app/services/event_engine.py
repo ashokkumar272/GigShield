@@ -87,12 +87,16 @@ async def process_event(
         return []
 
     # Find active policies for workers in the affected city
+    now = datetime.now(timezone.utc)
+
     stmt = (
         select(Policy)
         .join(Worker, Policy.worker_id == Worker.id)
         .where(
             func.lower(func.trim(Worker.city)) == normalized_city.lower(),
             Policy.status == "active",
+            Policy.start_date <= now,
+            ((Policy.end_date.is_(None)) | (Policy.end_date >= now)),
         )
     )
     result = await db.execute(stmt)

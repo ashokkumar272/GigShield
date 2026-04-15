@@ -64,6 +64,32 @@ weekly_premium = base_premium × zone_risk_multiplier × weather_risk_factor
 
 ---
 
+## Weekly Policy Window
+
+GigShield policies are sold on a weekly schedule so the coverage period stays aligned with gig workers' income cycles.
+
+- **Coverage start:** Monday 12:00 AM UTC
+- **Coverage end:** Sunday 11:59 PM UTC
+- **Purchase deadline:** a plan can only be bought until **24 hours before** the selected coverage start time
+- **Renewal prompt:** when a worker already has an active policy, the dashboard surfaces a reminder to buy the next week's plan while the purchase window is still open
+
+These values are intentionally centralized in [server/app/utils/constants.py](server/app/utils/constants.py) so they can be adjusted later without changing the surrounding flow.
+
+Current configuration variables:
+
+| Variable | Purpose |
+|---|---|
+| `POLICY_COVERAGE_START_WEEKDAY` | Coverage anchor day (`0` = Monday) |
+| `POLICY_COVERAGE_START_HOUR` | Coverage start hour |
+| `POLICY_COVERAGE_START_MINUTE` | Coverage start minute |
+| `POLICY_COVERAGE_START_SECOND` | Coverage start second |
+| `POLICY_COVERAGE_DURATION` | Weekly coverage length |
+| `POLICY_MIN_PURCHASE_LEAD_HOURS` | Minimum hours before coverage start required to buy |
+
+The worker dashboard renewal payload exposes the same rules through `/api/v1/dashboard/worker`, including `can_purchase_next_week`, `purchase_cutoff`, and `should_notify`.
+
+---
+
 ## Environment Variables
 
 | Variable | Description | Default |

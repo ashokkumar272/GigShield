@@ -5,7 +5,7 @@ pricing engine internally) and view their active policies.
 """
 
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Body, Depends, HTTPException, status
 from sqlalchemy import select
@@ -15,6 +15,13 @@ from app.models.claim import Claim
 from app.models.policy import Policy
 from app.models.worker import Worker
 from app.schemas.policy import PolicyCreate, PolicyRecommendationResponse, PolicyResponse
+from app.services.policy_window import (
+    can_purchase_for_start,
+    coverage_end_for_start,
+    next_coverage_start,
+    purchase_cutoff_for_start,
+    sync_worker_policy_statuses,
+)
 from app.services.policy_recommendation import generate_policy_recommendations
 from app.services.pricing_engine import calculate_premium
 from app.utils.deps import get_current_worker, get_db
@@ -36,22 +43,37 @@ async def create_policy(
     """Create a new weekly income-loss insurance policy for the logged-in worker.
 
     The pricing engine is called internally to compute the premium, coverage,
-    and risk score.  The policy starts immediately and runs for 7 days.
+    and risk score. Coverage starts in the next weekly window.
     """
-    # Check for existing active policy
+    now = datetime.now(timezone.utc)
+    await sync_worker_policy_statuses(db=db, worker_id=current_worker.id, reference=now)
+
+    coverage_start = next_coverage_start(now)
+    purchase_cutoff = purchase_cutoff_for_start(coverage_start)
+    if not can_purchase_for_start(now, coverage_start):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                "Purchase window closed for upcoming coverage week. "
+                f"Cutoff: {purchase_cutoff.isoformat()}"
+            ),
+        )
+
+    # Block duplicate bookings for the same upcoming coverage window.
     result = await db.execute(
         select(Policy).where(
             Policy.worker_id == current_worker.id,
-            Policy.status == "active",
+            Policy.status.in_(["active", "scheduled"]),
+            Policy.start_date == coverage_start,
         )
     )
     if result.scalar_one_or_none():
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Worker already has an active policy. Wait for it to expire or cancel it first.",
+            detail="Coverage for next week is already booked.",
         )
-
-    now = datetime.now(timezone.utc)
+    coverage_end = coverage_end_for_start(coverage_start)
+    policy_status = "active" if coverage_start <= now else "scheduled"
 
     if payload and payload.selected_recommendation:
         selected = payload.selected_recommendation
@@ -68,13 +90,13 @@ async def create_policy(
 
         policy = Policy(
             worker_id=current_worker.id,
-            status="active",
+            status=policy_status,
             weekly_premium_inr=selected.premium,
             coverage_amount_inr=selected.max_payout,
             risk_score=selected_risk_score,
             risk_factors=json.dumps(risk_factor_names),
-            start_date=now,
-            end_date=now + timedelta(days=7),
+            start_date=coverage_start,
+            end_date=coverage_end,
         )
     else:
         # Default flow uses pricing engine when no recommendation was selected.
@@ -87,13 +109,13 @@ async def create_policy(
 
         policy = Policy(
             worker_id=current_worker.id,
-            status="active",
+            status=policy_status,
             weekly_premium_inr=breakdown.weekly_premium_inr,
             coverage_amount_inr=breakdown.coverage_amount_inr,
             risk_score=breakdown.risk_score,
             risk_factors=json.dumps(risk_factor_names) if risk_factor_names else None,
-            start_date=now,
-            end_date=now + timedelta(days=7),
+            start_date=coverage_start,
+            end_date=coverage_end,
         )
     db.add(policy)
     await db.flush()
@@ -124,6 +146,7 @@ async def get_my_policies(
     current_worker: Worker = Depends(get_current_worker),
 ) -> list[Policy]:
     """Return all policies (active, expired, cancelled) for the worker."""
+    await sync_worker_policy_statuses(db=db, worker_id=current_worker.id)
     result = await db.execute(
         select(Policy)
         .where(Policy.worker_id == current_worker.id)
@@ -156,6 +179,7 @@ async def get_policy(
             detail="Invalid policy ID format",
         )
 
+    await sync_worker_policy_statuses(db=db, worker_id=current_worker.id)
     result = await db.execute(
         select(Policy).where(
             Policy.id == pid,
